@@ -86,7 +86,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --enable_bucket `
     --dataset_repeats=200 `
     --seed=23 `
-    ---save_precision="fp16"
+    --save_precision="fp16"
 ```
 
 ## SDV2.x Finetuning
@@ -113,7 +113,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --enable_bucket `
     --dataset_repeats=200 `
     --seed=23 `
-    ---save_precision="fp16"
+    --save_precision="fp16"
 ```
 
 ## SD1.x / SD2.x EMA and UCG (Unconditional Guidance) Finetuning
@@ -142,7 +142,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --ucg `
     --dataset_repeats=200 `
     --seed=23 `
-    ---save_precision="fp16"
+    --save_precision="fp16"
 ```
 
 ## Linux Setup
