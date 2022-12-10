@@ -70,9 +70,9 @@ If you would rather use model finetuning rather than the dreambooth method, whic
 
 ```
 accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
-    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
-    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
-    --output_dir="D:\dreambooth\train_alex_and_bernard" `
+    --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
+    --train_data_dir="D:\dreambooth\source\imageshere" `
+    --output_dir="D:\dreambooth\newmodelfolder" `
     --resolution="640,448" `
     --train_batch_size=1 `
     --learning_rate=1e-6 `
@@ -91,15 +91,15 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
 
 ## SDV2.x Finetuning
 
-Adding the --v2, as well as the --v-parameterization if using the 768-v model, arguments are all you need in order to have the trainer tune over an SDV2 model.
+Adding the --v2, as well as the --v-parameterization if using the 768-v model, arguments are all you need in order to have the trainer tune over an SDV2 model. REMINDER: YOU REQUIRE ONE OF THE YAML FILES PROVIDED IN THE /v2-inference FOLDER IN ORDER TO LOAD YOUR SDV2.x MODEL INTO MOST UIS FOR THE TIME BEING. If you tune with the 768-v model, you *must* use the v2-inference-v.yaml and rename it to your model's name and it MUST reside in the same folder as your model. If you tune with the regular 512 (not inpainting or depth map versions), you require the v2-inference.yaml file instead.
 
 ```
 accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --v2 `
     --v-parameterization `
-    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
-    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
-    --output_dir="D:\dreambooth\train_alex_and_bernard" `
+    --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
+    --train_data_dir="D:\dreambooth\source\imageshere" `
+    --output_dir="D:\dreambooth\newmodelfolder" `
     --resolution="640,448" `
     --train_batch_size=1 `
     --learning_rate=1e-6 `
@@ -118,15 +118,17 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
 
 ## SD1.x / SD2.x EMA and UCG (Unconditional Guidance) Finetuning
 
-Adding the --use_ema argument will query the script to load the model's EMA (Currently *only* at float16, adjustments may be made later however loading it in at float32 + even 8bit optimizer is nigh impossible within 24GB of VRAM) and help to prevent overfitting of the model via the moving average. Adding the --ucg argument will tell the script to have a 6% chance (likely will be changed to be adjustable) of dropping the caption for an image. Studies have shown that this can result in better output overall and seems to noticably improve img2img and inpainting. 
+Adding the --use_ema argument will query the script to load the model's EMA (Currently *only* at float16, adjustments may be made later however loading it in at float32 + even 8bit optimizer is nigh impossible within 24GB of VRAM) and help to prevent overfitting of the model via the moving average. Adding the --ucg argument will tell the script to have a 6% chance (likely will be changed to be adjustable) of dropping the caption for an image. Studies have shown that this can result in better output overall and seems to noticably improve img2img and inpainting.
+
+REMINDER: YOU REQUIRE ONE OF THE YAML FILES PROVIDED IN THE /v2-inference FOLDER IN ORDER TO LOAD YOUR SDV2.x MODEL INTO MOST UIS FOR THE TIME BEING. If you tune with the 768-v model, you *must* use the v2-inference-v.yaml and rename it to your model's name and it MUST reside in the same folder as your model. If you tune with the regular 512 (not inpainting or depth map versions), you require the v2-inference.yaml file instead.
 
 ```
 accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --v2 `
     --v-parameterization `
-    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
-    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
-    --output_dir="D:\dreambooth\train_alex_and_bernard" `
+    --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
+    --train_data_dir="D:\dreambooth\source\imageshere" `
+    --output_dir="D:\dreambooth\newmodelfolder" `
     --resolution="640,448" `
     --train_batch_size=1 `
     --learning_rate=1e-6 `
@@ -239,6 +241,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py \
 ## 12GB VRAM Compatibility
 
 Normally, running both the UNET and Text Encoder gradients at the same time will overfill the VRAM on a 12GB GPU. But, by first running a session with "--unetonly" and a specific seed set using "--seed", you should *theoretically* be able to get a similar, though likely not the same, performance afterwards by running "--encoderonly" with the same seed in a second session. While tuning the encoder alongside the UNET will assuredly be the best option, it requires more than 12GB to do, so this at least allows for the opportunity for >16GB cards to use this script in some way. EMA loading would be practically impossible to do on a 12GB card for the time being, however. Even if it were to somehow be loaded in 8bit.
+These arguments work for both SDV2.x and SDV1.x.
 
 
 Refer to this url for more details about finetuning: https://note.com/kohya_ss/n/n1269f1e1a54e
