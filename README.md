@@ -73,7 +73,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
     --train_data_dir="D:\dreambooth\source\imageshere" `
     --output_dir="D:\dreambooth\newmodelfolder" `
-    --resolution="640,448" `
+    --resolution="640" `
     --train_batch_size=1 `
     --learning_rate=1e-6 `
     --max_train_steps=550 `
@@ -100,7 +100,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
     --train_data_dir="D:\dreambooth\source\imageshere" `
     --output_dir="D:\dreambooth\newmodelfolder" `
-    --resolution="640,448" `
+    --resolution="512" `
     --train_batch_size=1 `
     --learning_rate=1e-6 `
     --max_train_steps=550 `
@@ -129,7 +129,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
     --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
     --train_data_dir="D:\dreambooth\source\imageshere" `
     --output_dir="D:\dreambooth\newmodelfolder" `
-    --resolution="640,448" `
+    --resolution="768" `
     --train_batch_size=1 `
     --learning_rate=1e-6 `
     --max_train_steps=550 `
@@ -220,7 +220,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py \
     --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" \
     --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" \
     --output_dir="D:\dreambooth\train_alex_and_bernard" \
-    --resolution="640,448" \
+    --resolution="960" \
     --train_batch_size=1 \
     --learning_rate=1e-6 \
     --max_train_steps=550 \
