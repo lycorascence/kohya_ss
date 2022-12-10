@@ -1,9 +1,10 @@
 # HOWTO
 
-This repo provide all the required config to run the Dreambooth version found in this note: https://note.com/kohya_ss/n/nee3ed1649fb6
-The setup of bitsandbytes with Adam8bit support for windows: https://note.com/kohya_ss/n/n47f654dc161e
+This repo provides all the required information to run the Dreambooth/Diffusers Finetuning style of training SD1.x and SD2.x image models found in this note: https://note.com/kohya_ss/n/nee3ed1649fb6, forked from https://github.com/bmaltais/kohya_ss
+This also includes the setup of bitsandbytes with Adam8bit support for windows: https://note.com/kohya_ss/n/n47f654dc161e
+Use a web translator if needed if you run into issues.
 
-## Required Dependencies
+## Required Dependencies For Windows
 
 Python 3.10.6 and Git:
 
@@ -21,7 +22,7 @@ Give unrestricted script access to powershell so venv can work:
 Open a regular Powershell terminal and type the following inside:
 
 ```powershell
-git clone https://github.com/bmaltais/kohya_ss.git
+git clone https://github.com/lycorasence/kohya_ss.git
 cd kohya_ss
 
 python -m venv --system-site-packages venv
@@ -39,9 +40,9 @@ accelerate config
 
 ```
 
-Answers to accelerate config:
+Suggested setup for a single GPU accelerate config:
 
-```txt
+```
 - 0
 - 0
 - NO
@@ -63,9 +64,294 @@ pip install --upgrade -r requirements.txt
 
 Once the commands have completed successfully you should be ready to use the new version.
 
-## Folders configuration
+## Finetuning
 
-Refer to the note to understand how to create the folde structure. In short it should look like:
+If you would rather use model finetuning rather than the dreambooth method, which you really should, you can use a command similar to the following below. The advantage of fine tuning is that you do not need to worry about regularization images, but you need to provide captions for every image! The caption is also a *seperate* file, normally in either .txt or .caption format. The caption will be used to train the model. You can use the Auto1111 WebUI to preprocess your training images and add either BLIP or Danbooru-style captions to them. It is highly recommended to review your generated captions and adjust them as necessary.
+
+```
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
+    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
+    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
+    --output_dir="D:\dreambooth\train_alex_and_bernard" `
+    --resolution="640,448" `
+    --train_batch_size=1 `
+    --learning_rate=1e-6 `
+    --max_train_steps=550 `
+    --use_8bit_adam `
+    --xformers `
+    --mixed_precision="fp16" `
+    --cache_latents `
+    --save_every_n_epochs=1 `
+    --fine_tuning `
+    --enable_bucket `
+    --dataset_repeats=200 `
+    --seed=23 `
+    ---save_precision="fp16"
+```
+
+## SDV2.x Finetuning
+
+Adding the --v2, as well as the --v-parameterization if using the 768-v model, arguments are all you need in order to have the trainer tune over an SDV2 model.
+
+```
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
+    --v2 `
+    --v-parameterization `
+    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
+    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
+    --output_dir="D:\dreambooth\train_alex_and_bernard" `
+    --resolution="640,448" `
+    --train_batch_size=1 `
+    --learning_rate=1e-6 `
+    --max_train_steps=550 `
+    --use_8bit_adam `
+    --xformers `
+    --mixed_precision="fp16" `
+    --cache_latents `
+    --save_every_n_epochs=1 `
+    --fine_tuning `
+    --enable_bucket `
+    --dataset_repeats=200 `
+    --seed=23 `
+    ---save_precision="fp16"
+```
+
+## SD1.x / SD2.x EMA and UCG (Unconditional Guidance) Finetuning
+
+Adding the --use_ema argument will query the script to load the model's EMA (Currently *only* at float16, adjustments may be made later however loading it in at float32 + even 8bit optimizer is nigh impossible within 24GB of VRAM) and help to prevent overfitting of the model via the moving average. Adding the --ucg argument will tell the script to have a 6% chance (likely will be changed to be adjustable) of dropping the caption for an image. Studies have shown that this can result in better output overall and seems to noticably improve img2img and inpainting. 
+
+```
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
+    --v2 `
+    --v-parameterization `
+    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
+    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
+    --output_dir="D:\dreambooth\train_alex_and_bernard" `
+    --resolution="640,448" `
+    --train_batch_size=1 `
+    --learning_rate=1e-6 `
+    --max_train_steps=550 `
+    --use_8bit_adam `
+    --xformers `
+    --mixed_precision="fp16" `
+    --cache_latents `
+    --save_every_n_epochs=1 `
+    --fine_tuning `
+    --enable_bucket `
+    --use_ema `
+    --ucg `
+    --dataset_repeats=200 `
+    --seed=23 `
+    ---save_precision="fp16"
+```
+
+## Linux Setup
+
+The setup for Linux is relatively simple, provided that your PyTorch CUDA toolkit and CUDA driver are at the same version and that your CUDA driver is set up properly in your PATH. If they are not, you will experience trouble compiling xformers. Build releases are selectable at https://pytorch.org/get-started/locally/ and https://pytorch.org/get-started/previous-versions/ if your CUDA install is older than 11.6.
+
+```
+git clone https://github.com/lycorasence/kohya_ss.git
+cd kohya_ss
+
+python -m venv --system-site-packages venv
+source .\venv\bin\activate
+
+pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116
+pip install --upgrade -r requirements.txt
+
+git clone https://github.com/facebookresearch/xformers.git
+cd xformers
+git submodule update --init --recursive
+pip install -U --pre triton
+pip install -r requirements.txt
+pip install -e .
+pip install cutlass
+
+accelerate config
+
+```
+-Alternate- Linux Anaconda setup
+
+Alternate, easy setup for Anaconda installs:
+Choose your platform at https://www.anaconda.com/products/distribution, though this run through the setup is specifically for Linux. Windows tutorial may come at another time. CUDA drivers still must be the same as your PyTorch CUDA Toolkit and be findable in PATH for xformers to properly build! Build releases are selectable at https://pytorch.org/get-started/locally/ and https://pytorch.org/get-started/previous-versions/ if your CUDA install is older than 11.6.
+
+```
+git clone https://github.com/lycorasence/kohya_ss.git
+cd kohya_ss
+
+conda create -n kohya python=3.10
+conda activate kohya
+
+pip install torch==1.12.1+cu116 torchvision==0.13.1+cu116 --extra-index-url https://download.pytorch.org/whl/cu116
+pip install --upgrade -r requirements.txt
+
+git clone https://github.com/facebookresearch/xformers.git
+cd xformers
+git submodule update --init --recursive
+pip install -U --pre triton
+pip install -r requirements.txt
+pip install -e .
+pip install cutlass
+
+accelerate config
+```
+
+Suggested setup for a single GPU accelerate config:
+
+```
+- 0
+- 0
+- NO
+- NO
+- All
+- fp16
+```
+
+## Example Linux Script
+
+Just an example script for Linux shell script.
+
+```
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py \
+    --v2 \
+    --v-parameterization \
+    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" \
+    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" \
+    --output_dir="D:\dreambooth\train_alex_and_bernard" \
+    --resolution="640,448" \
+    --train_batch_size=1 \
+    --learning_rate=1e-6 \
+    --max_train_steps=550 \
+    --use_8bit_adam \
+    --xformers \
+    --mixed_precision="fp16" \
+    --cache_latents \
+    --save_every_n_epochs=1 \
+    --fine_tuning \
+    --enable_bucket \
+    --use_ema \
+    --ucg \
+    --dataset_repeats=200 \
+    --seed=23 \
+    --save_state
+```
+
+
+
+Refer to this url for more details about finetuning: https://note.com/kohya_ss/n/n1269f1e1a54e
+
+## Options list (For v15. The original mod lacks the safetensors output argument.)
+
+```txt
+usage: train_db_fixed.py [-h] [--v2] [--v_parameterization]
+                         [--pretrained_model_name_or_path PRETRAINED_MODEL_NAME_OR_PATH] [--fine_tuning]
+                         [--shuffle_caption] [--caption_extention CAPTION_EXTENTION]
+                         [--caption_extension CAPTION_EXTENSION] [--train_data_dir TRAIN_DATA_DIR]
+                         [--reg_data_dir REG_DATA_DIR] [--dataset_repeats DATASET_REPEATS] [--output_dir OUTPUT_DIR]       
+                         [--use_safetensors] [--save_every_n_epochs SAVE_EVERY_N_EPOCHS] [--save_state] [--resume RESUME]  
+                         [--prior_loss_weight PRIOR_LOSS_WEIGHT] [--no_token_padding]
+                         [--stop_text_encoder_training STOP_TEXT_ENCODER_TRAINING] [--color_aug] [--flip_aug]
+                         [--face_crop_aug_range FACE_CROP_AUG_RANGE] [--random_crop] [--debug_dataset]
+                         [--resolution RESOLUTION] [--train_batch_size TRAIN_BATCH_SIZE] [--use_8bit_adam]
+                         [--mem_eff_attn] [--xformers] [--vae VAE] [--cache_latents] [--enable_bucket]
+                         [--min_bucket_reso MIN_BUCKET_RESO] [--max_bucket_reso MAX_BUCKET_RESO]
+                         [--learning_rate LEARNING_RATE] [--max_train_steps MAX_TRAIN_STEPS] [--seed SEED]
+                         [--gradient_checkpointing] [--mixed_precision {no,fp16,bf16}]
+                         [--save_precision {None,float,fp16,bf16}] [--clip_skip CLIP_SKIP] [--logging_dir LOGGING_DIR]     
+                         [--log_prefix LOG_PREFIX] [--lr_scheduler LR_SCHEDULER] [--lr_warmup_steps LR_WARMUP_STEPS] [--use_ema USE_EMA] [--ucg UCG]      
+
+options:
+  -h, --help            show this help message and exit
+  --v2                  load Stable Diffusion v2.0 model / Stable Diffusion 2.0のモデルを読み込む
+  --v_parameterization  enable v-parameterization training / v-parameterization学習を有効にする
+  --pretrained_model_name_or_path PRETRAINED_MODEL_NAME_OR_PATH
+                        pretrained model to train, directory to Diffusers model or StableDiffusion checkpoint /
+                        学習元モデル、Diffusers形式モデルのディレクトリまたはStableDiffusionのckptファイル
+  --fine_tuning         fine tune the model instead of DreamBooth / DreamBoothではなくfine tuningする
+  --shuffle_caption     shuffle comma-separated caption / コンマで区切られたcaptionの各要素をshuffleする
+  --caption_extention CAPTION_EXTENTION
+                        extension of caption files (backward compatiblity) / 読み込むcaptionファイルの拡張子（スペルミスを 残してあります）
+  --caption_extension CAPTION_EXTENSION
+                        extension of caption files / 読み込むcaptionファイルの拡張子
+  --train_data_dir TRAIN_DATA_DIR
+                        directory for train images / 学習画像データのディレクトリ
+  --reg_data_dir REG_DATA_DIR
+                        directory for regularization images / 正則化画像データのディレクトリ
+  --use_ema
+                        Calls for the script to load in the model's EMA at float16.
+  --ucg
+                        Calls for the script to drop a image caption 6% of the time.
+  --dataset_repeats DATASET_REPEATS
+                        repeat dataset in fine tuning / fine tuning時にデータセットを繰り返す回数
+  --output_dir OUTPUT_DIR
+                        directory to output trained model / 学習後のモデル出力先ディレクトリ
+  --use_safetensors     use safetensors format for StableDiffusion checkpoint /
+                        StableDiffusionのcheckpointをsafetensors形式で保存する
+  --save_every_n_epochs SAVE_EVERY_N_EPOCHS
+                        save checkpoint every N epochs / 学習中のモデルを指定エポックごとに保存します
+  --save_state          save training state additionally (including optimizer states etc.) /
+                        optimizerなど学習状態も含めたstateを追加で保存する
+  --resume RESUME       saved state to resume training / 学習再開するモデルのstate
+  --prior_loss_weight PRIOR_LOSS_WEIGHT
+                        loss weight for regularization images / 正則化画像のlossの重み
+  --no_token_padding    disable token padding (same as Diffuser's DreamBooth) /
+                        トークンのpaddingを無効にする（Diffusers版DreamBoothと同じ動作）
+  --stop_text_encoder_training STOP_TEXT_ENCODER_TRAINING
+                        steps to stop text encoder training / Text Encoderの学習を止めるステップ数
+  --color_aug           enable weak color augmentation / 学習時に色合いのaugmentationを有効にする
+  --flip_aug            enable horizontal flip augmentation / 学習時に左右反転のaugmentationを有効にする
+  --face_crop_aug_range FACE_CROP_AUG_RANGE
+                        enable face-centered crop augmentation and its range (e.g. 2.0,4.0) /
+                        学習時に顔を中心とした切り出しaugmentationを有効にするときは倍率を指定する（例：2.0,4.0）
+  --random_crop         enable random crop (for style training in face-centered crop augmentation) /
+                        ランダムな切り出しを有効にする（顔を中心としたaugmentationを行うときに画風の学習用に指定する）     
+  --debug_dataset       show images for debugging (do not train) / デバッグ用に学習データを画面表示する（学習は行わない）  
+  --resolution RESOLUTION
+                        resolution in training ('size' or 'width,height') / 学習時の画像解像度（'サイズ'指定、または'幅,高 さ'指定）
+  --train_batch_size TRAIN_BATCH_SIZE
+                        batch size for training (1 means one train or reg data, not train/reg pair) /
+                        学習時のバッチサイズ（1でtrain/regをそれぞれ1件ずつ学習）
+  --use_8bit_adam       use 8bit Adam optimizer (requires bitsandbytes) / 8bit Adamオプティマイザを使う（bitsandbytesのインストールが必要）
+  --mem_eff_attn        use memory efficient attention for CrossAttention / CrossAttentionに省メモリ版attentionを使う      
+  --xformers            use xformers for CrossAttention / CrossAttentionにxformersを使う
+  --vae VAE             path to checkpoint of vae to replace / VAEを入れ替える場合、VAEのcheckpointファイルまたはディレクトリ
+  --cache_latents       cache latents to reduce memory (augmentations must be disabled) /
+                        メモリ削減のためにlatentをcacheする（augmentationは使用不可）
+  --enable_bucket       enable buckets for multi aspect ratio training / 複数解像度学習のためのbucketを有効にする
+  --min_bucket_reso MIN_BUCKET_RESO
+                        minimum resolution for buckets / bucketの最小解像度
+  --max_bucket_reso MAX_BUCKET_RESO
+                        maximum resolution for buckets / bucketの最小解像度
+  --learning_rate LEARNING_RATE
+                        learning rate / 学習率
+  --max_train_steps MAX_TRAIN_STEPS
+                        training steps / 学習ステップ数
+  --seed SEED           random seed for training / 学習時の乱数のseed
+  --gradient_checkpointing
+                        enable gradient checkpointing / grandient checkpointingを有効にする
+  --mixed_precision {no,fp16,bf16}
+                        use mixed precision / 混合精度を使う場合、その精度
+  --save_precision {None,float,fp16,bf16}
+                        precision in saving (available in StableDiffusion checkpoint) /
+                        保存時に精度を変更して保存する（StableDiffusion形式での保存時のみ有効）
+  --clip_skip CLIP_SKIP
+                        use output of nth layer from back of text encoder (n>=1) / text encoderの後ろからn番目の層の出力を 用いる（nは1以上）
+  --logging_dir LOGGING_DIR
+                        enable logging and output TensorBoard log to this directory /
+                        ログ出力を有効にしてこのディレクトリにTensorBoard用のログを出力する
+  --log_prefix LOG_PREFIX
+                        add prefix for each log directory / ログディレクトリ名の先頭に追加する文字列
+  --lr_scheduler LR_SCHEDULER
+                        scheduler to use for learning rate / 学習率のスケジューラ: linear, cosine, cosine_with_restarts,   
+                        polynomial, constant (default), constant_with_warmup
+  --lr_warmup_steps LR_WARMUP_STEPS
+                        Number of steps for the warmup in the lr scheduler (default is 0) /
+                        学習率のスケジューラをウォームアップするステップ数（デフォルト0）
+```
+
+## Folders configuration for -Dreambooth- tuning setup
+
+If you would rather use Dreambooth for tuning for some reason, refer to the note to understand how to create the folder structure. Similar to newer Shivam and joepenna tuning repos, it should look like:
 
 ```
 <arbitrary folder name>
@@ -246,137 +532,6 @@ accelerate launch --num_cpu_threads_per_process $num_cpu_threads_per_process tra
 cp v2_inference\v2-inference-v.yaml $output_dir"\last.yaml"
 ```
 
-## Finetuning
-
-If you would rather use model finetuning rather than the dreambooth method you can use a command similat to the following. The advantage of fine tuning is that you do not need to worry about regularization images... but you need to provide captions for every images. The caption will be used to train the model. You can use auto1111 to preprocess your training images and add either BLIP or danbooru captions to them. You then need to edit those to add the name of the model and correct any wrong description.
-
-```
-accelerate launch --num_cpu_threads_per_process 6 train_db_fixed-ber.py `
-    --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" `
-    --train_data_dir="D:\dreambooth\source\alet_et_bernard\landscape-pp" `
-    --output_dir="D:\dreambooth\train_alex_and_bernard" `
-    --resolution="640,448" `
-    --train_batch_size=1 `
-    --learning_rate=1e-6 `
-    --max_train_steps=550 `
-    --use_8bit_adam `
-    --xformers `
-    --mixed_precision="fp16" `
-    --cache_latents `
-    --save_every_n_epochs=1 `
-    --fine_tuning `
-    --enable_bucket `
-    --dataset_repeats=200 `
-    --seed=23 `
-    ---save_precision="fp16"
-```
-
-Refer to this url for more details about finetuning: https://note.com/kohya_ss/n/n1269f1e1a54e
-
-## Options list
-
-```txt
-usage: train_db_fixed.py [-h] [--v2] [--v_parameterization]
-                         [--pretrained_model_name_or_path PRETRAINED_MODEL_NAME_OR_PATH] [--fine_tuning]
-                         [--shuffle_caption] [--caption_extention CAPTION_EXTENTION]
-                         [--caption_extension CAPTION_EXTENSION] [--train_data_dir TRAIN_DATA_DIR]
-                         [--reg_data_dir REG_DATA_DIR] [--dataset_repeats DATASET_REPEATS] [--output_dir OUTPUT_DIR]       
-                         [--use_safetensors] [--save_every_n_epochs SAVE_EVERY_N_EPOCHS] [--save_state] [--resume RESUME]  
-                         [--prior_loss_weight PRIOR_LOSS_WEIGHT] [--no_token_padding]
-                         [--stop_text_encoder_training STOP_TEXT_ENCODER_TRAINING] [--color_aug] [--flip_aug]
-                         [--face_crop_aug_range FACE_CROP_AUG_RANGE] [--random_crop] [--debug_dataset]
-                         [--resolution RESOLUTION] [--train_batch_size TRAIN_BATCH_SIZE] [--use_8bit_adam]
-                         [--mem_eff_attn] [--xformers] [--vae VAE] [--cache_latents] [--enable_bucket]
-                         [--min_bucket_reso MIN_BUCKET_RESO] [--max_bucket_reso MAX_BUCKET_RESO]
-                         [--learning_rate LEARNING_RATE] [--max_train_steps MAX_TRAIN_STEPS] [--seed SEED]
-                         [--gradient_checkpointing] [--mixed_precision {no,fp16,bf16}]
-                         [--save_precision {None,float,fp16,bf16}] [--clip_skip CLIP_SKIP] [--logging_dir LOGGING_DIR]     
-                         [--log_prefix LOG_PREFIX] [--lr_scheduler LR_SCHEDULER] [--lr_warmup_steps LR_WARMUP_STEPS]       
-
-options:
-  -h, --help            show this help message and exit
-  --v2                  load Stable Diffusion v2.0 model / Stable Diffusion 2.0のモデルを読み込む
-  --v_parameterization  enable v-parameterization training / v-parameterization学習を有効にする
-  --pretrained_model_name_or_path PRETRAINED_MODEL_NAME_OR_PATH
-                        pretrained model to train, directory to Diffusers model or StableDiffusion checkpoint /
-                        学習元モデル、Diffusers形式モデルのディレクトリまたはStableDiffusionのckptファイル
-  --fine_tuning         fine tune the model instead of DreamBooth / DreamBoothではなくfine tuningする
-  --shuffle_caption     shuffle comma-separated caption / コンマで区切られたcaptionの各要素をshuffleする
-  --caption_extention CAPTION_EXTENTION
-                        extension of caption files (backward compatiblity) / 読み込むcaptionファイルの拡張子（スペルミスを 残してあります）
-  --caption_extension CAPTION_EXTENSION
-                        extension of caption files / 読み込むcaptionファイルの拡張子
-  --train_data_dir TRAIN_DATA_DIR
-                        directory for train images / 学習画像データのディレクトリ
-  --reg_data_dir REG_DATA_DIR
-                        directory for regularization images / 正則化画像データのディレクトリ
-  --dataset_repeats DATASET_REPEATS
-                        repeat dataset in fine tuning / fine tuning時にデータセットを繰り返す回数
-  --output_dir OUTPUT_DIR
-                        directory to output trained model / 学習後のモデル出力先ディレクトリ
-  --use_safetensors     use safetensors format for StableDiffusion checkpoint /
-                        StableDiffusionのcheckpointをsafetensors形式で保存する
-  --save_every_n_epochs SAVE_EVERY_N_EPOCHS
-                        save checkpoint every N epochs / 学習中のモデルを指定エポックごとに保存します
-  --save_state          save training state additionally (including optimizer states etc.) /
-                        optimizerなど学習状態も含めたstateを追加で保存する
-  --resume RESUME       saved state to resume training / 学習再開するモデルのstate
-  --prior_loss_weight PRIOR_LOSS_WEIGHT
-                        loss weight for regularization images / 正則化画像のlossの重み
-  --no_token_padding    disable token padding (same as Diffuser's DreamBooth) /
-                        トークンのpaddingを無効にする（Diffusers版DreamBoothと同じ動作）
-  --stop_text_encoder_training STOP_TEXT_ENCODER_TRAINING
-                        steps to stop text encoder training / Text Encoderの学習を止めるステップ数
-  --color_aug           enable weak color augmentation / 学習時に色合いのaugmentationを有効にする
-  --flip_aug            enable horizontal flip augmentation / 学習時に左右反転のaugmentationを有効にする
-  --face_crop_aug_range FACE_CROP_AUG_RANGE
-                        enable face-centered crop augmentation and its range (e.g. 2.0,4.0) /
-                        学習時に顔を中心とした切り出しaugmentationを有効にするときは倍率を指定する（例：2.0,4.0）
-  --random_crop         enable random crop (for style training in face-centered crop augmentation) /
-                        ランダムな切り出しを有効にする（顔を中心としたaugmentationを行うときに画風の学習用に指定する）     
-  --debug_dataset       show images for debugging (do not train) / デバッグ用に学習データを画面表示する（学習は行わない）  
-  --resolution RESOLUTION
-                        resolution in training ('size' or 'width,height') / 学習時の画像解像度（'サイズ'指定、または'幅,高 さ'指定）
-  --train_batch_size TRAIN_BATCH_SIZE
-                        batch size for training (1 means one train or reg data, not train/reg pair) /
-                        学習時のバッチサイズ（1でtrain/regをそれぞれ1件ずつ学習）
-  --use_8bit_adam       use 8bit Adam optimizer (requires bitsandbytes) / 8bit Adamオプティマイザを使う（bitsandbytesのインストールが必要）
-  --mem_eff_attn        use memory efficient attention for CrossAttention / CrossAttentionに省メモリ版attentionを使う      
-  --xformers            use xformers for CrossAttention / CrossAttentionにxformersを使う
-  --vae VAE             path to checkpoint of vae to replace / VAEを入れ替える場合、VAEのcheckpointファイルまたはディレクトリ
-  --cache_latents       cache latents to reduce memory (augmentations must be disabled) /
-                        メモリ削減のためにlatentをcacheする（augmentationは使用不可）
-  --enable_bucket       enable buckets for multi aspect ratio training / 複数解像度学習のためのbucketを有効にする
-  --min_bucket_reso MIN_BUCKET_RESO
-                        minimum resolution for buckets / bucketの最小解像度
-  --max_bucket_reso MAX_BUCKET_RESO
-                        maximum resolution for buckets / bucketの最小解像度
-  --learning_rate LEARNING_RATE
-                        learning rate / 学習率
-  --max_train_steps MAX_TRAIN_STEPS
-                        training steps / 学習ステップ数
-  --seed SEED           random seed for training / 学習時の乱数のseed
-  --gradient_checkpointing
-                        enable gradient checkpointing / grandient checkpointingを有効にする
-  --mixed_precision {no,fp16,bf16}
-                        use mixed precision / 混合精度を使う場合、その精度
-  --save_precision {None,float,fp16,bf16}
-                        precision in saving (available in StableDiffusion checkpoint) /
-                        保存時に精度を変更して保存する（StableDiffusion形式での保存時のみ有効）
-  --clip_skip CLIP_SKIP
-                        use output of nth layer from back of text encoder (n>=1) / text encoderの後ろからn番目の層の出力を 用いる（nは1以上）
-  --logging_dir LOGGING_DIR
-                        enable logging and output TensorBoard log to this directory /
-                        ログ出力を有効にしてこのディレクトリにTensorBoard用のログを出力する
-  --log_prefix LOG_PREFIX
-                        add prefix for each log directory / ログディレクトリ名の先頭に追加する文字列
-  --lr_scheduler LR_SCHEDULER
-                        scheduler to use for learning rate / 学習率のスケジューラ: linear, cosine, cosine_with_restarts,   
-                        polynomial, constant (default), constant_with_warmup
-  --lr_warmup_steps LR_WARMUP_STEPS
-                        Number of steps for the warmup in the lr scheduler (default is 0) /
-                        学習率のスケジューラをウォームアップするステップ数（デフォルト0）
-```
 
 ## Change history
 
