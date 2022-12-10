@@ -1869,8 +1869,13 @@ def train(args):
     vae.requires_grad_(False)
     vae.eval()
 
+  
   unet.requires_grad_(True)                   # 念のため追加
   text_encoder.requires_grad_(True)
+  if args.unetonly:
+    text_encoder.requires_grad_(False)
+  if args.encoderonly:
+    unet.requires_grad_(False)
 
   if args.gradient_checkpointing:
     unet.enable_gradient_checkpointing()
@@ -2127,7 +2132,7 @@ if __name__ == '__main__':
   parser.add_argument("--shuffle_caption", action="store_true",
                       help="shuffle comma-separated caption / コンマで区切られたcaptionの各要素をshuffleする")
   parser.add_argument("--use_ema", action="store_true", help="Whether to use EMA model.")
-  parser.add_argument('--ucg', action="store_true", help='Percentage chance of dropping out the text condition per batch. Ranges from 0.0 to 1.0 where 1.0 means 100% text condition dropout.') # 4% dropout probability
+  parser.add_argument('--ucg', action="store_true", help='Percentage chance of dropping out the text condition per batch. Ranges from 0.0 to 1.0 where 1.0 means 100% text condition dropout.') # 6% dropout probability
   parser.add_argument("--caption_extention", type=str, default=None,
                       help="extension of caption files (backward compatiblity) / 読み込むcaptionファイルの拡張子（スペルミスを残してあります）")
   parser.add_argument("--caption_extension", type=str, default=".caption", help="extension of caption files / 読み込むcaptionファイルの拡張子")
@@ -2166,6 +2171,10 @@ if __name__ == '__main__':
                       help="use memory efficient attention for CrossAttention / CrossAttentionに省メモリ版attentionを使う")
   parser.add_argument("--xformers", action="store_true",
                       help="use xformers for CrossAttention / CrossAttentionにxformersを使う")
+  parser.add_argument("--unetonly", action="store_true",
+                      help="Required for 12GB VRAM cards. Use --seed if you plan to tune the encoder afterwards (you really, really should.)")
+  parser.add_argument("--encoderonly", action="store_true",
+                      help="Required for 12GB VRAM cards. RUN AFTER UNETONLY TUNING AND ENSURE YOU USE THE SAME SEED WITH --seed")                      
   parser.add_argument("--cache_latents", action="store_true",
                       help="cache latents to reduce memory (augmentations must be disabled) / メモリ削減のためにlatentをcacheする（augmentationは使用不可）")
   parser.add_argument("--enable_bucket", action="store_true",
