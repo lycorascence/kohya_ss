@@ -236,6 +236,9 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py \
     --save_state
 ```
 
+## 12GB VRAM Compatibility
+
+Normally, running both the UNET and Text Encoder gradients at the same time will overfill the VRAM on a 12GB GPU. But, by first running a session with "--unetonly" and a specific seed set using "--seed", you should *theoretically* be able to get a similar, though likely not the same, performance afterwards by running "--encoderonly" with the same seed in a second session. While tuning the encoder alongside the UNET will assuredly be the best option, it requires more than 12GB to do, so this at least allows for the opportunity for >16GB cards to use this script in some way. EMA loading would be practically impossible to do on a 12GB card for the time being, however. Even if it were to somehow be loaded in 8bit.
 
 
 Refer to this url for more details about finetuning: https://note.com/kohya_ss/n/n1269f1e1a54e
