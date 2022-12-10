@@ -281,6 +281,10 @@ options:
                         Calls for the script to load in the model's EMA at float16.
   --ucg
                         Calls for the script to drop a image caption 6% of the time.
+  --unetonly            
+                        Required for 12GB VRAM cards. Use --seed if you plan to tune the encoder afterwards (you really, really should.)
+  --encoderonly         
+                        Required for 12GB VRAM cards. RUN AFTER UNETONLY TUNING AND ENSURE YOU USE THE SAME SEED WITH --seed
   --dataset_repeats DATASET_REPEATS
                         repeat dataset in fine tuning / fine tuning時にデータセットを繰り返す回数
   --output_dir OUTPUT_DIR
