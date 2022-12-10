@@ -948,6 +948,10 @@ def train(args):
 
   unet.requires_grad_(True)                   # 念のため追加
   text_encoder.requires_grad_(True)
+  if args.unetonly:
+    text_encoder.requires_grad_(False)
+  if args.encoderonly:
+    unet.requires_grad_(False)
 
   if args.gradient_checkpointing:
     unet.enable_gradient_checkpointing()
@@ -1255,6 +1259,10 @@ if __name__ == '__main__':
                       help="path to checkpoint of vae to replace / VAEを入れ替える場合、VAEのcheckpointファイルまたはディレクトリ")
   parser.add_argument("--cache_latents", action="store_true",
                       help="cache latents to reduce memory (augmentations must be disabled) / メモリ削減のためにlatentをcacheする（augmentationは使用不可）")
+    parser.add_argument("--unetonly", action="store_true",
+                      help="Required for 12GB VRAM cards. Use --seed if you plan to tune the encoder afterwards (you really, really should.)")
+  parser.add_argument("--encoderonly", action="store_true",
+                      help="Required for 12GB VRAM cards. RUN AFTER UNETONLY TUNING AND ENSURE YOU USE THE SAME SEED WITH --seed")      
   parser.add_argument("--enable_bucket", action="store_true",
                       help="enable buckets for multi aspect ratio training / 複数解像度学習のためのbucketを有効にする")
   parser.add_argument("--min_bucket_reso", type=int, default=256, help="minimum resolution for buckets / bucketの最小解像度")
