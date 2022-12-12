@@ -789,14 +789,15 @@ def train(args):
     img_paths = glob.glob(os.path.join(args.train_data_dir, "*.png")) + \
         glob.glob(os.path.join(args.train_data_dir, "*.jpg")) + glob.glob(os.path.join(args.train_data_dir, "*.webp"))
     for img_path in tqdm(img_paths):
-      if args.ucg: 
-        if random.random() > 0.06:
+      if args.ucg:
+        roll = random.randint(1,100)
+#        print(roll)
+        if roll > 6:
             caption = read_caption(img_path)
         else:
             caption = ''
-      caption = read_caption(img_path)
-      assert caption is not None and len(
-          caption) > 0, f"no caption for image. check caption_extension option / キャプションファイルが見つからないかcaptionが空です。caption_extensionオプションを確認してください: {img_path}"
+#      assert caption is not None and len(
+#          caption) > 0, f"no caption for image. check caption_extension option / キャプションファイルが見つからないかcaptionが空です。caption_extensionオプションを確認してください: {img_path}"
       train_img_path_captions.append((img_path, caption))
 
     if args.dataset_repeats is not None:
