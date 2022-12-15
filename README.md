@@ -69,7 +69,7 @@ Once the commands have completed successfully you should be ready to use the new
 If you would rather use model finetuning rather than the dreambooth method, which you really should, you can use a command similar to the following below. The advantage of fine tuning is that you do not need to worry about regularization images, but you need to provide captions for every image! The caption is also a *seperate* file, normally in either .txt or .caption format. The caption will be used to train the model. You can use the Auto1111 WebUI to preprocess your training images and add either BLIP or Danbooru-style captions to them. It is highly recommended to review your generated captions and adjust them as necessary.
 
 ```
-accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod2.py `
     --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
     --train_data_dir="D:\dreambooth\source\imageshere" `
     --output_dir="D:\dreambooth\newmodelfolder" `
@@ -94,7 +94,7 @@ accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
 Adding the --v2, as well as the --v-parameterization if using the 768-v model, arguments are all you need in order to have the trainer tune over an SDV2 model. REMINDER: YOU REQUIRE ONE OF THE YAML FILES PROVIDED IN THE /v2-inference FOLDER IN ORDER TO LOAD YOUR SDV2.x MODEL INTO MOST UIS FOR THE TIME BEING. If you tune with the 768-v model, you *must* use the v2-inference-v.yaml and rename it to your model's name and it MUST reside in the same folder as your model. If you tune with the regular 512 (not inpainting or depth map versions), you require the v2-inference.yaml file instead.
 
 ```
-accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod2.py `
     --v2 `
     --v-parameterization `
     --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
@@ -123,7 +123,7 @@ Adding the --use_ema argument will query the script to load the model's EMA (Cur
 REMINDER: YOU REQUIRE ONE OF THE YAML FILES PROVIDED IN THE /v2-inference FOLDER IN ORDER TO LOAD YOUR SDV2.x MODEL INTO MOST UIS FOR THE TIME BEING. If you tune with the 768-v model, you *must* use the v2-inference-v.yaml and rename it to your model's name and it MUST reside in the same folder as your model. If you tune with the regular 512 (not inpainting or depth map versions), you require the v2-inference.yaml file instead.
 
 ```
-accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py `
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod2.py `
     --v2 `
     --v-parameterization `
     --pretrained_model_name_or_path="D:\models\yourmodelhere.ckpt" `
@@ -214,7 +214,7 @@ Suggested setup for a single GPU accelerate config:
 Just an example script for Linux shell script.
 
 ```
-accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod.py \
+accelerate launch --num_cpu_threads_per_process 8 train_db_fixed_mod2.py \
     --v2 \
     --v-parameterization \
     --pretrained_model_name_or_path="D:\models\alexandrine_teissier_and_bernard_maltais-400-kohya-sd15-v1.ckpt" \
