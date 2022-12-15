@@ -1260,7 +1260,7 @@ if __name__ == '__main__':
                       help="path to checkpoint of vae to replace / VAEを入れ替える場合、VAEのcheckpointファイルまたはディレクトリ")
   parser.add_argument("--cache_latents", action="store_true",
                       help="cache latents to reduce memory (augmentations must be disabled) / メモリ削減のためにlatentをcacheする（augmentationは使用不可）")
-    parser.add_argument("--unetonly", action="store_true",
+  parser.add_argument("--unetonly", action="store_true",
                       help="Required for 12GB VRAM cards. Use --seed if you plan to tune the encoder afterwards (you really, really should.)")
   parser.add_argument("--encoderonly", action="store_true",
                       help="Required for 12GB VRAM cards. RUN AFTER UNETONLY TUNING AND ENSURE YOU USE THE SAME SEED WITH --seed")      
