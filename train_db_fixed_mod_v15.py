@@ -800,9 +800,9 @@ def train(args):
 #          caption) > 0, f"no caption for image. check caption_extension option / キャプションファイルが見つからないかcaptionが空です。caption_extensionオプションを確認してください: {img_path}"
         else:
             caption = read_caption(img_path)
-            print(caption)
+#            print(caption)
             assert caption is not None and len(caption) > 0, f"no caption for image. check caption_extension option / キャプションファイルが見つからないかcaptionが空です。caption_extensionオプションを確認してください: {img_path}"
-        assert caption is not None and len(caption) > 0, f"no caption for image. check caption_extension option / キャプションファイルが見つからないかcaptionが空です。caption_extensionオプションを確認してください: {img_path}"
+#        assert caption is not None and len(caption) > 0, f"no caption for image. check caption_extension option / キャプションファイルが見つからないかcaptionが空です。caption_extensionオプションを確認してください: {img_path}"
         train_img_path_captions.append((img_path, caption))
 
     if args.dataset_repeats is not None:
